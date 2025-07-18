@@ -1,0 +1,52 @@
+# Mengatur region dan zona default
+export REGION=us-central1
+export ZONE=us-central1-a
+
+# Mengambil project ID aktif saat ini
+export PROJECT_ID=$(gcloud config get-value project)
+
+# ========================
+# TASK 1: Membuat bucket Cloud Storage
+# ========================
+gsutil mb -l US gs://$PROJECT_ID-bucket
+
+# ========================
+# TASK 2: Membuat VM dan disk persistent
+# ========================
+
+# Membuat disk dengan ukuran 200GB di zona yang ditentukan
+gcloud compute disks create mydisk \
+  --size=200GB \
+  --zone=$ZONE
+
+# Membuat VM instance bernama "my-instance"
+# VM ini akan menggunakan Debian 11 dengan boot disk 10GB dan menambahkan disk "mydisk"
+# Juga akan menjalankan NGINX melalui startup script
+gcloud compute instances create my-instance \
+  --zone=$ZONE \
+  --machine-type=e2-medium \
+  --image-family=debian-11 \
+  --image-project=debian-cloud \
+  --boot-disk-size=10GB \
+  --boot-disk-type=pd-balanced \
+  --tags=http-server \
+  --create-disk=name=mydisk,device-name=mydisk,mode=rw,boot=no \
+  --metadata=startup-script='
+    #!/bin/bash
+    apt-get update
+    apt-get install -y nginx
+    systemctl start nginx
+    systemctl enable nginx
+    echo "<h1>Selamat datang di NGINX di my-instance</h1>" > /var/www/html/index.nginx-debian.html
+  '
+
+# ========================
+# TASK 3: Verifikasi NGINX
+# ========================
+# (Langkah ini dilakukan manual atau via SSH):
+# 1. SSH ke instance:
+#    gcloud compute ssh my-instance --zone=$ZONE
+# 2. Jalankan perintah untuk melihat status NGINX:
+#    sudo systemctl status nginx
+# 3. Atau buka browser dan akses IP Eksternal dari VM untuk melihat halaman NGINX
+
