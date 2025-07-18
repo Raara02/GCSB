@@ -1,1 +1,32 @@
-hmm, blm ada
+--Region--
+gcloud config set compute/region us-east1
+
+--1. Membuat bucket--
+gcloud storage buckets create gs://<YOUR-BUCKET-NAME>
+
+--2. Mengupload objek ke dalam bucket Anda--
+-download-
+curl https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/Ada_Lovelace_portrait.jpg/800px-Ada_Lovelace_portrait.jpg --output ada.jpg
+-upload-
+gcloud storage cp ada.jpg gs://YOUR-BUCKET-NAME
+-Hapus-
+rm ada.jpg
+
+--3. Mendownload objek dari bucket Anda--
+gcloud storage cp -r gs://YOUR-BUCKET-NAME/ada.jpg .
+
+--4. Menyalin objek ke folder di dalam bucket--
+gcloud storage cp gs://YOUR-BUCKET-NAME/ada.jpg gs://YOUR-BUCKET-NAME/image-folder/
+
+--5. Menampilkan daftar konten dari bucket atau folder--
+gcloud storage ls gs://YOUR-BUCKET-NAME
+
+--6. Menampilkan detail untuk objek--
+gcloud storage ls -l gs://YOUR-BUCKET-NAME/ada.jpg
+
+--7. Menjadikan objek dapat diakses secara publik--
+gsutil acl ch -u AllUsers:R gs://YOUR-BUCKET-NAME/ada.jpg
+-Hapus Akses-
+gsutil acl ch -d AllUsers gs://YOUR-BUCKET-NAME/ada.jpg
+-Hapus Objek-
+gcloud storage rm gs://YOUR-BUCKET-NAME/ada.jpg
