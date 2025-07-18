@@ -1,0 +1,51 @@
+# === Task 3: Buat HTTP Load Balancer ===
+# 1. Create Health Check
+gcloud compute health-checks create http http-basic-check \
+    --port 80 \
+    --request-path / \
+    --check-interval 30s \
+    --timeout 10s \
+    --unhealthy-threshold 3 \
+    --healthy-threshold 2
+
+# 2. Create Backend Service (Global)
+gcloud compute backend-services create backend-service \
+    --protocol HTTP \
+    --port-name http \
+    --health-checks http-basic-check \
+    --global
+
+# 3. Add Instance Group to Backend Service
+gcloud compute backend-services add-backend backend-service \
+    --instance-group lb-backend-group \
+    --instance-group-zone us-central1-c \
+    --global
+
+# 4. Create URL Map using the Backend Service
+gcloud compute url-maps create web-map-http \
+    --default-service backend-service
+
+# 5. Create Target HTTP Proxy using the URL Map
+gcloud compute target-http-proxies create http-lb-proxy \
+    --url-map web-map-http
+
+# 6. Create Global Forwarding Rule with external IP
+gcloud compute forwarding-rules create http-content-rule \
+    --address=lb-ipv4-1 \
+    --global \
+    --target-http-proxy=http-lb-proxy \
+    --ports=80
+
+# === Task 4: Buat Firewall Rule untuk Health Check ===
+gcloud compute firewall-rules create fw-allow-health-check \
+    --direction=INGRESS \
+    --priority=1000 \
+    --network=default \
+    --action=ALLOW \
+    --rules=tcp:80 \
+    --source-ranges=130.211.0.0/22,35.191.0.0/16 \
+    --target-tags=allow-health-check
+
+# === Task 5: Buat Static External IP untuk Load Balancer ===
+gcloud compute addresses create lb-ipv4-1 \
+    --global
